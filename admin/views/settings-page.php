@@ -273,8 +273,19 @@ $history = $this->settings->get_history( 10 );
                     </div>
 
                     <div class="wpgd-form-row">
-                        <label><?php esc_html_e( 'Deploy on changes to:', 'wp-github-deploy' ); ?></label>
-                        <div class="wpgd-checkbox-grid">
+                        <div class="wpgd-label-with-actions">
+                            <label><?php esc_html_e( 'Deploy on changes to:', 'wp-github-deploy' ); ?></label>
+                            <div class="wpgd-select-actions">
+                                <button type="button" class="wpgd-link-button" id="wpgd-select-all-types">
+                                    <?php esc_html_e( 'Select all', 'wp-github-deploy' ); ?>
+                                </button>
+                                <span class="wpgd-separator">|</span>
+                                <button type="button" class="wpgd-link-button" id="wpgd-deselect-all-types">
+                                    <?php esc_html_e( 'Deselect all', 'wp-github-deploy' ); ?>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="wpgd-checkbox-grid" id="wpgd-post-types-grid">
                             <?php foreach ( $available_post_types as $slug => $label ) : ?>
                                 <label>
                                     <input 

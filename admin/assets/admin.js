@@ -23,6 +23,10 @@
             $(document).on('change', '#wpgd-auto-deploy', this.toggleAutoDeploySettings.bind(this));
 
             $(document).on('click', '#wpgd-toggle-token', this.toggleTokenVisibility.bind(this));
+
+            $(document).on('click', '#wpgd-select-all-types', this.handleSelectAllTypes.bind(this));
+
+            $(document).on('click', '#wpgd-deselect-all-types', this.handleDeselectAllTypes.bind(this));
         },
 
         handleDeployNow: function(e) {
@@ -183,6 +187,16 @@
                 $input.attr('type', 'password');
                 $button.find('.dashicons').removeClass('dashicons-hidden').addClass('dashicons-visibility');
             }
+        },
+
+        handleSelectAllTypes: function(e) {
+            e.preventDefault();
+            $('#wpgd-post-types-grid input[type="checkbox"]').prop('checked', true);
+        },
+
+        handleDeselectAllTypes: function(e) {
+            e.preventDefault();
+            $('#wpgd-post-types-grid input[type="checkbox"]').prop('checked', false);
         },
 
         startStatusPolling: function() {

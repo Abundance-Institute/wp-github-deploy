@@ -257,6 +257,43 @@
     flex: 1;
 }
 
+/* Label with actions (select all / deselect all) */
+.wpgd-label-with-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.wpgd-label-with-actions > label {
+    margin-bottom: 0;
+}
+
+.wpgd-select-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wpgd-link-button {
+    background: none;
+    border: none;
+    color: #2271b1;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.wpgd-link-button:hover {
+    color: #135e96;
+}
+
+.wpgd-separator {
+    color: #c3c4c7;
+    font-size: 12px;
+}
+
 /* Checkbox grid */
 .wpgd-checkbox-grid {
     display: flex;
@@ -278,13 +315,18 @@
 
 /* Toggle switch */
 .wpgd-toggle {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 12px;
+    margin-bottom: 0;
 }
 
 .wpgd-toggle input[type="checkbox"] {
     display: none;
+}
+
+.wpgd-form-row > label.wpgd-toggle {
+    display: flex !important;
 }
 
 .wpgd-toggle-switch {

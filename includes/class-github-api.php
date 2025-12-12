@@ -13,7 +13,7 @@ class WPGD_GitHub_API {
     }
 
     private function get_headers(): array {
-        $token = $this->settings->get( 'github_token' );
+        $token = $this->settings->get_token();
         
         return [
             'Authorization'        => 'Bearer ' . $token,
@@ -88,7 +88,7 @@ class WPGD_GitHub_API {
         $owner    = $this->settings->get( 'github_owner' );
         $repo     = $this->settings->get( 'github_repo' );
         $workflow = $this->settings->get( 'github_workflow' );
-        $token    = $this->settings->get( 'github_token' );
+        $token    = $this->settings->get_token();
 
         if ( empty( $token ) ) {
             return [
