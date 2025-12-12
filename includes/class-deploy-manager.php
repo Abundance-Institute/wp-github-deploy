@@ -37,12 +37,7 @@ class WPGD_Deploy_Manager {
     public function deploy_now( string $reason = 'manual', array $context = [] ): bool {
         $this->api->clear_status_cache();
 
-        $inputs = [
-            'trigger_source' => $reason,
-            'triggered_at'   => current_time( 'c' ),
-        ];
-
-        $result = $this->api->trigger_workflow( $inputs );
+        $result = $this->api->trigger_workflow();
 
         $this->settings->add_to_history( [
             'source'  => $reason,
