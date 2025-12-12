@@ -1,8 +1,8 @@
-=== WP GitHub Deploy ===
-Contributors: yourname
+=== Easy Github Deploy ===
+Contributors: jaredlambert
 Tags: github, deploy, headless, jamstack, workflow, actions
 Requires at least: 5.8
-Tested up to: 6.4
+Tested up to: 6.9
 Stable tag: 1.0.0
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -12,7 +12,7 @@ Trigger GitHub Actions workflow deployments when WordPress content changes. Perf
 
 == Description ==
 
-WP GitHub Deploy automatically triggers GitHub Actions workflows when content changes in WordPress. This is ideal for headless WordPress setups where your frontend is built with frameworks like Next.js, Gatsby, Nuxt, or Astro.
+Easy Github Deploy automatically triggers GitHub Actions workflows when content changes in WordPress. This is ideal for headless WordPress setups where your frontend is built with frameworks like Next.js, Gatsby, Nuxt, or Astro.
 
 = Features =
 
@@ -41,9 +41,9 @@ WP GitHub Deploy automatically triggers GitHub Actions workflows when content ch
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/wp-github-deploy/`
+1. Upload the plugin files to `/wp-content/plugins/easy-github-deploy/`
 2. Activate the plugin through the 'Plugins' screen in WordPress
-3. Go to Settings → GitHub Deploy to configure the plugin
+3. Go to Settings → Easy Github Deploy to configure the plugin
 4. Enter your GitHub Personal Access Token, repository details, and workflow file
 5. Click "Validate" to verify the connection
 6. Configure your deploy settings and save
@@ -131,5 +131,5 @@ Failed deploys are logged in the history with the error message. You can view th
 == Upgrade Notice ==
 
 = 1.0.0 =
-Initial release of WP GitHub Deploy.
+Initial release of Easy Github Deploy.
 
