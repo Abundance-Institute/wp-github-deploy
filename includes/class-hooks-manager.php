@@ -27,6 +27,9 @@ class WPGD_Hooks_Manager {
         add_action( 'acf/update_field_group', [ $this, 'on_acf_field_group_update' ], 10, 1 );
         add_action( 'acf/options_page/save', [ $this, 'on_acf_options_save' ], 10, 2 );
         add_action( 'upgrader_process_complete', [ $this, 'on_wp_update' ], 10, 2 );
+
+        // Scheduled posts: fires for ANY post type when future → publish
+        add_action( 'future_to_publish', [ $this, 'on_scheduled_post_published' ], 10, 1 );
     }
 
     public function on_post_status_change( string $new_status, string $old_status, \WP_Post $post ): void {
@@ -35,6 +38,11 @@ class WPGD_Hooks_Manager {
         }
 
         if ( ! $this->deploy_manager->should_deploy_for_post_type( $post->post_type ) ) {
+            return;
+        }
+
+        // Skip scheduled post → publish (handled by future_to_publish hook)
+        if ( $old_status === 'future' && $new_status === 'publish' ) {
             return;
         }
 
@@ -59,6 +67,31 @@ class WPGD_Hooks_Manager {
             'post_title' => $post->post_title,
             'old_status' => $old_status,
             'new_status' => $new_status,
+        ] );
+    }
+
+    /**
+     * Handle scheduled posts being published.
+     * This fires via the future_to_publish hook when ANY post type transitions
+     * from 'future' (scheduled) to 'publish' status - works automatically for
+     * all post types including custom ones.
+     *
+     * @param \WP_Post $post Post object.
+     */
+    public function on_scheduled_post_published( \WP_Post $post ): void {
+        if ( wp_is_post_revision( $post ) || wp_is_post_autosave( $post ) ) {
+            return;
+        }
+
+        if ( ! $this->deploy_manager->should_deploy_for_post_type( $post->post_type ) ) {
+            return;
+        }
+
+        $this->queue_deploy( 'scheduled_post_published', [
+            'post_id'    => $post->ID,
+            'post_type'  => $post->post_type,
+            'post_title' => $post->post_title,
+            'scheduled'  => true,
         ] );
     }
 
