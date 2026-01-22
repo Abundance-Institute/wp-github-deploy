@@ -257,7 +257,7 @@ class WPGD_Admin_Page {
             $timestamp = strtotime( $timestamp );
         }
 
-        $diff = time() - $timestamp;
+        $diff = current_time( 'timestamp', true ) - $timestamp;
 
         if ( $diff < 60 ) {
             return __( 'Just now', 'wp-github-deploy' );

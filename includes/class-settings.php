@@ -155,8 +155,9 @@ class WPGD_Settings {
         $history = $this->get( 'deploy_history', [] );
 
         array_unshift( $history, array_merge( [
-            'timestamp' => current_time( 'timestamp' ),
-            'date'      => current_time( 'mysql' ),
+            'timestamp'        => current_time( 'timestamp', true ),
+            'date'             => current_time( 'mysql', true ),
+            'timestamp_is_utc' => true,
         ], $deploy ) );
 
         $history = array_slice( $history, 0, 50 );
@@ -166,11 +167,42 @@ class WPGD_Settings {
 
     public function get_history( int $limit = 20 ): array {
         $history = $this->get( 'deploy_history', [] );
+        $history = $this->normalize_history( $history );
         return array_slice( $history, 0, $limit );
     }
 
     public function clear_history(): void {
         $this->set( 'deploy_history', [] );
+    }
+
+    private function normalize_history( array $history ): array {
+        $updated  = false;
+        $timezone = wp_timezone();
+
+        foreach ( $history as $index => $deploy ) {
+            if ( empty( $deploy['timestamp'] ) ) {
+                continue;
+            }
+
+            if ( ! isset( $deploy['timestamp_is_utc'] ) || ! $deploy['timestamp_is_utc'] ) {
+                $timestamp = (int) $deploy['timestamp'];
+                $offset = $timezone->getOffset( new \DateTimeImmutable( '@' . $timestamp ) );
+                $timestamp_gmt = $timestamp - $offset;
+
+                $deploy['timestamp'] = $timestamp_gmt;
+                $deploy['date'] = gmdate( 'Y-m-d H:i:s', $timestamp_gmt );
+                $deploy['timestamp_is_utc'] = true;
+
+                $history[ $index ] = $deploy;
+                $updated = true;
+            }
+        }
+
+        if ( $updated ) {
+            $this->set( 'deploy_history', $history );
+        }
+
+        return $history;
     }
 
     public function export(): array {
