@@ -41,7 +41,7 @@ Easy Github Deploy automatically triggers GitHub Actions workflows when content 
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/easy-github-deploy/`
+1. Upload the plugin files to `/wp-content/plugins/wp-github-deploy/`
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Go to Settings → Easy Github Deploy to configure the plugin
 4. Enter your GitHub Personal Access Token, repository details, and workflow file

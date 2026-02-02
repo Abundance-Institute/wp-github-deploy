@@ -280,6 +280,7 @@ class WPGD_Admin_Page {
         $labels = [
             'manual'                 => __( 'Manual deploy', 'wp-github-deploy' ),
             'post_updated'           => __( 'Post updated', 'wp-github-deploy' ),
+            'scheduled_post_published' => __( 'Scheduled post published', 'wp-github-deploy' ),
             'post_deleted'           => __( 'Post deleted', 'wp-github-deploy' ),
             'term_created'           => __( 'Term created', 'wp-github-deploy' ),
             'term_updated'           => __( 'Term updated', 'wp-github-deploy' ),

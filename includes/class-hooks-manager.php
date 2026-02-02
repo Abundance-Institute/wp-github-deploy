@@ -92,6 +92,8 @@ class WPGD_Hooks_Manager {
             'post_type'  => $post->post_type,
             'post_title' => $post->post_title,
             'scheduled'  => true,
+            // Avoid a second cron pass after scheduled publishes.
+            'bypass_debounce' => wp_doing_cron(),
         ] );
     }
 

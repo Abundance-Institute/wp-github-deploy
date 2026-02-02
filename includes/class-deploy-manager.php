@@ -24,6 +24,11 @@ class WPGD_Deploy_Manager {
             return false;
         }
 
+        if ( ! empty( $context['bypass_debounce'] ) ) {
+            unset( $context['bypass_debounce'] );
+            return $this->deploy_now( $trigger_source, $context );
+        }
+
         $debounce_minutes = (int) $this->settings->get( 'debounce_minutes', 5 );
 
         if ( $debounce_minutes > 0 ) {
