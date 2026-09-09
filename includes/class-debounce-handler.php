@@ -46,9 +46,12 @@ class WPGD_Debounce_Handler {
             ];
         }
 
-        set_transient( self::PENDING_KEY, $pending, $delay_seconds + 60 );
+        $this->set_pending_info( $pending );
         $this->clear_scheduled_event();
-        wp_schedule_single_event( $execute_at, self::CRON_HOOK, [ $pending['batch_id'] ] );
+        $result = wp_schedule_single_event( $execute_at, self::CRON_HOOK, [ $pending['batch_id'] ], true );
+        if ( is_wp_error( $result ) || ! $result ) {
+            update_option( 'wpgd_deployment_error', 'Could not schedule the pending deployment. Use Deploy Now.', false );
+        }
         do_action( 'wpgd_deploy_scheduled', $pending );
     }
 
@@ -78,18 +81,30 @@ class WPGD_Debounce_Handler {
             ? $source_types[0] 
             : sprintf( 'batched (%d changes)', count( $sources ) );
 
-        $this->clear();
         $deploy_manager = wpgd()->deploy_manager;
         $deploy_manager->deploy_now( $reason, $context );
     }
 
     public function is_pending(): bool {
-        return (bool) get_transient( self::PENDING_KEY );
+        return null !== $this->get_pending_info();
     }
 
     public function get_pending_info(): ?array {
-        $pending = get_transient( self::PENDING_KEY );
-        return $pending ? $pending : null;
+        $pending = get_option( self::PENDING_KEY, null );
+
+        if ( is_array( $pending ) && isset( $pending['batch_id'] ) ) {
+            return $pending;
+        }
+
+        $legacy_pending = get_transient( self::PENDING_KEY );
+
+        if ( $legacy_pending ) {
+            $this->set_pending_info( $legacy_pending );
+            delete_transient( self::PENDING_KEY );
+            return $legacy_pending;
+        }
+
+        return null;
     }
 
     public function get_time_remaining(): int|false {
@@ -100,7 +115,7 @@ class WPGD_Debounce_Handler {
         }
 
         $remaining = $pending['execute_at'] - time();
-        return $remaining > 0 ? $remaining : false;
+        return max( 0, $remaining );
     }
 
     public function get_formatted_time_remaining(): string {
@@ -128,7 +143,10 @@ class WPGD_Debounce_Handler {
 
     public function clear(): bool {
         $this->clear_scheduled_event();
-        return delete_transient( self::PENDING_KEY );
+        $deleted_option = delete_option( self::PENDING_KEY );
+        $deleted_transient = delete_transient( self::PENDING_KEY );
+
+        return $deleted_option || $deleted_transient;
     }
 
     private function clear_scheduled_event(): void {
@@ -161,12 +179,16 @@ class WPGD_Debounce_Handler {
         $pending['execute_at'] = time() + $delay_seconds;
         $pending['updated_at'] = time();
 
-        set_transient( self::PENDING_KEY, $pending, $delay_seconds + 60 );
+        $this->set_pending_info( $pending );
 
         $this->clear_scheduled_event();
         wp_schedule_single_event( $pending['execute_at'], self::CRON_HOOK, [ $pending['batch_id'] ] );
 
         return true;
     }
-}
 
+    private function set_pending_info( array $pending ): void {
+        // Pending deploys must survive external cron gaps; expiring them early drops valid deploys.
+        update_option( self::PENDING_KEY, $pending, false );
+    }
+}

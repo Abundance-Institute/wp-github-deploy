@@ -66,7 +66,7 @@ class WPGD_GitHub_API {
         if ( $response_code === 204 ) {
             return [
                 'success' => true,
-                'message' => __( 'Workflow triggered successfully!', 'wp-github-deploy' ),
+                'message' => __( 'GitHub accepted the deployment. Build completion is being tracked.', 'wp-github-deploy' ),
             ];
         }
 
@@ -291,7 +291,7 @@ class WPGD_GitHub_API {
             ],
         ];
 
-        set_transient( 'wpgd_last_deploy_status', $result, 5 * MINUTE_IN_SECONDS );
+        set_transient( 'wpgd_last_deploy_status', $result, 15 );
 
         return $result;
     }
@@ -299,5 +299,38 @@ class WPGD_GitHub_API {
     public function clear_status_cache(): void {
         delete_transient( 'wpgd_last_deploy_status' );
     }
-}
 
+    public function find_tracked_run( string $deployment_id ): array {
+        $owner = $this->settings->get( 'github_owner' );
+        $repo = $this->settings->get( 'github_repo' );
+        $workflow = $this->settings->get( 'github_workflow' );
+        $url = self::API_BASE . "/repos/{$owner}/{$repo}/actions/workflows/{$workflow}/runs";
+        $result = $this->read_run_response( add_query_arg( [
+            'branch' => $this->settings->get( 'github_branch', 'main' ),
+            'event' => 'workflow_dispatch', 'per_page' => 100,
+        ], $url ) );
+        if ( ! $result['success'] ) { return $result; }
+        foreach ( $result['data']['workflow_runs'] ?? [] as $run ) {
+            if ( ( $run['display_title'] ?? '' ) === 'WordPress deploy ' . $deployment_id ) {
+                return [ 'success' => true, 'data' => $run ];
+            }
+        }
+        return [ 'success' => true, 'data' => null ];
+    }
+
+    public function get_tracked_run( string $run_id ): array {
+        $owner = $this->settings->get( 'github_owner' );
+        $repo = $this->settings->get( 'github_repo' );
+        return $this->read_run_response( self::API_BASE . "/repos/{$owner}/{$repo}/actions/runs/" . rawurlencode( $run_id ) );
+    }
+
+    private function read_run_response( string $url ): array {
+        $response = wp_remote_get( $url, [ 'headers' => $this->get_headers(), 'timeout' => 15 ] );
+        if ( is_wp_error( $response ) ) { return [ 'success' => false, 'message' => $response->get_error_message() ]; }
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( wp_remote_retrieve_response_code( $response ) !== 200 || ! is_array( $body ) ) {
+            return [ 'success' => false, 'message' => $body['message'] ?? 'Unable to read GitHub workflow status.' ];
+        }
+        return [ 'success' => true, 'data' => $body ];
+    }
+}

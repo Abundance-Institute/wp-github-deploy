@@ -215,6 +215,10 @@ class WPGD_Admin_Page {
 
     public function show_admin_notices(): void {
         settings_errors( 'wpgd_settings' );
+        $error = get_option( 'wpgd_deployment_error' );
+        if ( $error && current_user_can( 'manage_options' ) ) {
+            echo '<div class="notice notice-error"><p>Website deployment needs attention: ' . esc_html( $error ) . '</p></div>';
+        }
 
         $screen = get_current_screen();
         if ( $screen && $screen->id !== 'settings_page_' . self::MENU_SLUG ) {
@@ -299,4 +303,3 @@ class WPGD_Admin_Page {
         return $labels[ $source ] ?? $source;
     }
 }
-

@@ -200,9 +200,8 @@
         },
 
         startStatusPolling: function() {
-            // Only poll if there's a pending deploy
+            this.statusInterval = setInterval(this.updateStatus.bind(this), 15000);
             if ($('#wpgd-pending-banner').length) {
-                this.statusInterval = setInterval(this.updateStatus.bind(this), 5000);
                 this.countdownInterval = setInterval(this.updateCountdown.bind(this), 1000);
             }
         },
@@ -218,8 +217,16 @@
                 success: function(response) {
                     if (response.success) {
                         const data = response.data;
+                        if (data.latest_run) {
+                            const signature = data.latest_run.id + ':' + data.latest_run.status + ':' + data.latest_run.conclusion;
+                            if (WPGD.lastRunSignature && WPGD.lastRunSignature !== signature && data.latest_run.status === 'completed') {
+                                location.reload();
+                                return;
+                            }
+                            WPGD.lastRunSignature = signature;
+                        }
                         
-                        if (data.pending && data.time_remaining > 0) {
+                        if (data.pending) {
                             WPGD.showPendingBanner(data.time_remaining, data.pending_count);
                         } else {
                             WPGD.hidePendingBanner();
@@ -261,7 +268,7 @@
                 // Create banner if it doesn't exist
                 const minutes = Math.floor(timeRemaining / 60);
                 const secs = timeRemaining % 60;
-                const timeStr = minutes + ':' + (secs < 10 ? '0' : '') + secs;
+                const timeStr = timeRemaining > 0 ? minutes + ':' + (secs < 10 ? '0' : '') + secs : 'Waiting for scheduler…';
                 
                 $banner = $(`
                     <div id="wpgd-pending-banner" class="wpgd-pending-banner">
@@ -289,7 +296,7 @@
                 const secs = timeRemaining % 60;
                 $('#wpgd-countdown')
                     .data('seconds', timeRemaining)
-                    .text(minutes + ':' + (secs < 10 ? '0' : '') + secs);
+                    .text(timeRemaining > 0 ? minutes + ':' + (secs < 10 ? '0' : '') + secs : 'Waiting for scheduler…');
                 $banner.find('.wpgd-pending-text span').text(changeCount + ' change(s) queued');
             }
         },
@@ -342,4 +349,3 @@
     });
 
 })(jQuery);
-

@@ -3,8 +3,8 @@ Contributors: jaredlambert
 Tags: github, deploy, headless, jamstack, workflow, actions
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.0.0
-Requires PHP: 7.4
+Stable tag: 1.1.0
+Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,7 +35,7 @@ Easy Github Deploy automatically triggers GitHub Actions workflows when content 
 = Requirements =
 
 * WordPress 5.8 or higher
-* PHP 7.4 or higher
+* PHP 8.0 or higher
 * A GitHub repository with a workflow file configured for `workflow_dispatch`
 * A GitHub Personal Access Token with `repo` and `workflow` scopes
 
@@ -54,12 +54,13 @@ Your GitHub workflow file needs to support `workflow_dispatch`. Here's an exampl
 
 ```yaml
 name: Deploy
+run-name: ${{ inputs.deployment_id && format('WordPress deploy {0}', inputs.deployment_id) || 'Deploy website' }}
 
 on:
   workflow_dispatch:
     inputs:
-      trigger_source:
-        description: 'What triggered this deploy'
+      deployment_id:
+        description: 'WordPress deployment tracking ID'
         required: false
         type: string
 
@@ -108,7 +109,9 @@ Yes! Click the "Deploy Now" button at the top of the settings page. This bypasse
 
 = What happens if a deploy fails? =
 
-Failed deploys are logged in the history with the error message. You can view the full error by hovering over the "Failed" status or checking your GitHub Actions logs.
+The plugin tracks the exact GitHub run. Accepted requests are separate from completed deployments. Failed builds or missing runs retry after two minutes and then ten minutes, up to three attempts. Exhausted retries show a persistent administrator notice. GitHub status outages are checked again without dispatching duplicate builds.
+
+The workflow must accept `deployment_id` and use the exact `run-name` above. Configure a real server cron to run WordPress scheduled events every minute so publishing, retries, and status checks work without site traffic. Due deployments remain visible as “Waiting for scheduler…” until dispatched.
 
 == Screenshots ==
 
@@ -117,6 +120,11 @@ Failed deploys are logged in the history with the error message. You can view th
 3. Deploy history showing recent deployments
 
 == Changelog ==
+
+= 1.1.0 =
+* Durable deployment jobs, exact workflow tracking, and bounded retries.
+* Distinguish dispatch acceptance from successful deployment.
+* Keep overdue pending deployments visible and report persistent failures.
 
 = 1.0.0 =
 * Initial release
@@ -132,4 +140,3 @@ Failed deploys are logged in the history with the error message. You can view th
 
 = 1.0.0 =
 Initial release of Easy Github Deploy.
-

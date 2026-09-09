@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: Easy Github Deploy
- * Plugin URI: https://github.com/jaredlambert/easy-github-deploy
+ * Plugin URI: https://github.com/jaredlambert/wp-github-deploy
  * Description: Trigger GitHub Actions workflow deployments when WordPress content changes. Perfect for headless WordPress sites.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Jared Lambert
  * Author URI: https://jaredlambert.com
  * License: GPL-2.0+
@@ -11,14 +11,14 @@
  * Text Domain: wp-github-deploy
  * Domain Path: /languages
  * Requires at least: 5.8
- * Requires PHP: 7.4
+ * Requires PHP: 8.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WPGD_VERSION', '1.0.0' );
+define( 'WPGD_VERSION', '1.1.0' );
 define( 'WPGD_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPGD_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPGD_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -32,6 +32,7 @@ final class WP_GitHub_Deploy {
     public $deploy_manager;
     public $debounce;
     public $hooks_manager;
+    public $tracker;
     public $admin;
 
     public static function instance() {
@@ -53,6 +54,7 @@ final class WP_GitHub_Deploy {
         require_once WPGD_PLUGIN_DIR . 'includes/class-deploy-manager.php';
         require_once WPGD_PLUGIN_DIR . 'includes/class-debounce-handler.php';
         require_once WPGD_PLUGIN_DIR . 'includes/class-hooks-manager.php';
+        require_once WPGD_PLUGIN_DIR . 'includes/class-deployment-tracker.php';
         
         if ( is_admin() ) {
             require_once WPGD_PLUGIN_DIR . 'admin/class-admin-page.php';
@@ -62,6 +64,7 @@ final class WP_GitHub_Deploy {
     private function init_components() {
         $this->settings       = new WPGD_Settings();
         $this->api            = new WPGD_GitHub_API( $this->settings );
+        $this->tracker        = new WPGD_Deployment_Tracker( $this->api, $this->settings );
         $this->debounce       = new WPGD_Debounce_Handler( $this->settings );
         $this->deploy_manager = new WPGD_Deploy_Manager( $this->api, $this->settings, $this->debounce );
         $this->hooks_manager  = new WPGD_Hooks_Manager( $this->deploy_manager, $this->settings );
@@ -89,6 +92,7 @@ final class WP_GitHub_Deploy {
     public function deactivate() {
         wp_clear_scheduled_hook( 'wpgd_execute_deploy' );
         wp_clear_scheduled_hook( 'wpgd_acf_batch_deploy' );
+        delete_option( 'wpgd_pending_deploy' );
         delete_transient( 'wpgd_pending_deploy' );
         delete_transient( 'wpgd_acf_updating' );
         delete_transient( 'wpgd_last_deploy_status' );
@@ -100,4 +104,3 @@ function wpgd() {
 }
 
 add_action( 'plugins_loaded', 'wpgd' );
-

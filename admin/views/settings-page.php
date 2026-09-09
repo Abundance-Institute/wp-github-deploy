@@ -65,7 +65,7 @@ $history = $this->settings->get_history( 10 );
 
     <?php settings_errors( 'wpgd_settings' ); ?>
 
-    <?php if ( $pending_info && $time_remaining ) : ?>
+    <?php if ( $pending_info ) : ?>
         <div id="wpgd-pending-banner" class="wpgd-pending-banner">
             <div class="wpgd-pending-info">
                 <span class="dashicons dashicons-clock"></span>
@@ -80,7 +80,7 @@ $history = $this->settings->get_history( 10 );
                 $secs    = $time_remaining % 60;
                 ?>
                 <span id="wpgd-countdown" class="wpgd-countdown" data-seconds="<?php echo esc_attr( $time_remaining ); ?>">
-                    <?php echo esc_html( sprintf( '%d:%02d', $minutes, $secs ) ); ?>
+                    <?php echo esc_html( $time_remaining > 0 ? sprintf( '%d:%02d', $minutes, $secs ) : 'Waiting for scheduler…' ); ?>
                 </span>
                 <button type="button" id="wpgd-cancel-deploy" class="wpgd-button wpgd-button-danger">
                     <?php esc_html_e( 'Cancel', 'wp-github-deploy' ); ?>
@@ -429,12 +429,12 @@ $history = $this->settings->get_history( 10 );
                                     <?php if ( $deploy['success'] ) : ?>
                                         <span class="wpgd-status-badge success">
                                             <span class="dashicons dashicons-yes"></span>
-                                            <?php esc_html_e( 'Success', 'wp-github-deploy' ); ?>
+                                            <?php echo esc_html( ( $deploy['phase'] ?? 'dispatch' ) === 'completed' ? 'Deployed' : 'Accepted' ); ?>
                                         </span>
                                     <?php else : ?>
                                         <span class="wpgd-status-badge error" title="<?php echo esc_attr( $deploy['message'] ?? '' ); ?>">
                                             <span class="dashicons dashicons-no"></span>
-                                            <?php esc_html_e( 'Failed', 'wp-github-deploy' ); ?>
+                                            <?php echo esc_html( ( $deploy['phase'] ?? '' ) === 'retry' ? 'Retry scheduled' : 'Failed' ); ?>
                                         </span>
                                     <?php endif; ?>
                                 </td>
@@ -453,4 +453,3 @@ $history = $this->settings->get_history( 10 );
     </div>
 
 </div>
-

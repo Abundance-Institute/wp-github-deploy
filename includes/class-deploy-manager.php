@@ -42,19 +42,16 @@ class WPGD_Deploy_Manager {
     public function deploy_now( string $reason = 'manual', array $context = [] ): bool {
         $this->api->clear_status_cache();
 
-        $result = $this->api->trigger_workflow();
-
-        $this->settings->add_to_history( [
-            'source'  => $reason,
-            'context' => $context,
-            'success' => $result['success'],
-            'message' => $result['message'],
-        ] );
-
-        $this->debounce->clear();
-        do_action( 'wpgd_deploy_triggered', $result, $reason, $context );
-
-        return $result['success'];
+        // The tracker persists a recovery job before contacting GitHub and
+        // records the exact workflow outcome separately from dispatch acceptance.
+        $pending_before = $this->debounce->get_pending_info();
+        $success = wpgd()->tracker->dispatch( $reason, $context );
+        // Preserve edits queued by another request while GitHub was responding.
+        if ( $pending_before && $this->debounce->get_pending_info() === $pending_before ) {
+            $this->debounce->clear();
+        }
+        do_action( 'wpgd_deploy_triggered', [ 'success' => $success ], $reason, $context );
+        return $success;
     }
 
     public function execute_acf_batch_deploy(): void {
@@ -141,4 +138,3 @@ class WPGD_Deploy_Manager {
         ];
     }
 }
-
